@@ -25,12 +25,12 @@ include-package-data = false  # All bundled resources are listed below.
 "print3d.skill" = "skills/print3d"
 
 [tool.setuptools.package-data]
-print3d = ["profiles/*/*", "coupons/*.py"]
+print3d = ["profiles/*/*", "coupons/*.py", "vendor/three/*"]
 "print3d.skill" = ["*.md", "references/*.md"]
 
 [tool.uv]
 # `uvx --from <checkout>` (the Hermes plugin's mcp.json) rebuilds when the code changes.
-cache-keys = [{ file = "pyproject.toml" }, { file = "src/**/*.py" }, { file = "skills/**/*.md" }, { file = "src/**/*.json" }, { git = { commit = true } }]
+cache-keys = [{ file = "pyproject.toml" }, { file = "src/**/*.py" }, { file = "skills/**/*.md" }, { file = "src/**/*.json" }, { file = "src/**/*.js" }, { git = { commit = true } }]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

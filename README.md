@@ -101,8 +101,8 @@ scroll to zoom, hide parts, pull them apart with the Explode slider, and
 **Hermes desktop app** the agent opens it in the preview pane beside the chat,
 so you can turn the part around while you ask for changes. In the TUI or a
 messaging app, you get the images and the path to open in a browser. The page is
-one self-contained file; three.js loads from a CDN, so it needs a connection the
-first time.
+one self-contained file, three.js included, so it opens with no connection: from
+disk, from a chat attachment, on a phone.
 
 When the job is green, Hermes reports time, grams and layers and gives you the
 project file, `jobs/<slug>/slice/<slug>.3mf`. Open that one in Studio: the
@@ -152,8 +152,8 @@ part takes more time and filament than on the X2D.
 - **Network:** print3d itself makes no network calls. Installing the plugin asks
   to add its Python dependencies (Pillow, mcp) to Hermes's environment, and on
   first start `uvx` downloads them from PyPI for the server's own environment.
-  The 3D view loads three.js from cdn.jsdelivr.net when you open it. A shop
-  listing's URL is recorded, never fetched.
+  The 3D view carries its own copy of three.js (`src/print3d/vendor/three`) and
+  fetches nothing. A shop listing's URL is recorded, never fetched.
 - **The printer:** nothing is sent to it. You print from Studio.
 - No telemetry, no credentials, no background processes beyond the MCP server
   Hermes starts.

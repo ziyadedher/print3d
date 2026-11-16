@@ -2,7 +2,8 @@
 
 One self-contained file, so it opens from disk in a browser or in an agent's
 preview pane (Hermes desktop's `open_preview`). The STLs travel inside it as
-base64; three.js comes from a CDN.
+base64, and so does three.js (vendor/three, about 0.9 MB once encoded): the page
+needs no network, so a copy saved from a chat app or opened on a phone works.
 """
 
 from __future__ import annotations
@@ -15,7 +16,22 @@ from typing import Any
 from print3d.filaments import colour_hex
 from print3d.handoff import _parts
 
-THREE = "https://cdn.jsdelivr.net/npm/three@0.160.0"
+VENDOR = Path(__file__).parent / "vendor" / "three"
+# Each specifier the page imports, and the vendored file it resolves to.
+MODULES = {
+    "three": "three.module.min.js",
+    "three/addons/controls/OrbitControls.js": "OrbitControls.js",
+    "three/addons/loaders/STLLoader.js": "STLLoader.js",
+}
+
+
+def _importmap() -> str:
+    """The importmap, every module inline as a data: URL (base64: a URL drops newlines)."""
+    imports = {
+        spec: "data:text/javascript;base64," + base64.b64encode((VENDOR / name).read_bytes()).decode("ascii")
+        for spec, name in MODULES.items()
+    }
+    return json.dumps({"imports": imports})
 
 
 def _stl(job_dir: Path, part: dict[str, Any], single: bool) -> Path | None:
@@ -52,7 +68,7 @@ def build_viewer(job_dir: Path, report: dict[str, Any]) -> Path | None:
     }
     payload = json.dumps(data).replace("</", "<\\/")
     out = job_dir / "view.html"
-    out.write_text(PAGE.replace("__THREE__", THREE).replace("__DATA__", payload), encoding="utf-8")
+    out.write_text(PAGE.replace("__IMPORTMAP__", _importmap()).replace("__DATA__", payload), encoding="utf-8")
     return out
 
 
@@ -100,7 +116,7 @@ body.measuring canvas { cursor: crosshair; }
 #error { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; padding: 24px; text-align: center; }
 </style>
 <script type="importmap">
-{ "imports": { "three": "__THREE__/build/three.module.js", "three/addons/": "__THREE__/examples/jsm/" } }
+__IMPORTMAP__
 </script>
 </head>
 <body>
@@ -136,7 +152,7 @@ body.measuring canvas { cursor: crosshair; }
 </script>
 <div id="hint">Drag to rotate · scroll to zoom · right-drag to pan</div>
 <div id="readout" hidden></div>
-<div id="error">Could not load three.js from the CDN. The viewer needs an internet connection the first time.</div>
+<div id="error">Could not start the 3D viewer in this browser. It needs WebGL and a recent browser (Chrome, Firefox, or Safari 16.4 or later).</div>
 <script type="application/json" id="data">__DATA__</script>
 <script type="module">
 import * as THREE from 'three';
@@ -322,7 +338,7 @@ reset();
 renderer.setAnimationLoop(() => { controls.update(); placeReadout(); renderer.render(scene, camera); });
 </script>
 <script>
-// A module that never ran means the CDN import failed.
+// A module that never ran means the browser could not start it (no import maps or no WebGL).
 window.addEventListener('load', () => setTimeout(() => {
   if (!document.querySelector('canvas')) document.getElementById('error').style.display = 'flex';
 }, 1500));
